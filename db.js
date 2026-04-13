@@ -1,19 +1,27 @@
-const mysql = require("mysql2");
+const db = require("../db");
 
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT
-});
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
 
-db.connect(err => {
-  if (err) {
-    console.log("DB Error ❌", err);
-  } else {
-    console.log("MySQL Connected ✅");
+  try {
+    const [results] = await db.query(
+      "SELECT * FROM users WHERE email = ?",
+      [email]
+    );
+
+    if (!results.length) {
+      return res.status(400).json({ error: "User not found" });
+    }
+
+    const user = results[0];
+
+    if (user.password !== password) {
+      return res.status(400).json({ error: "Wrong password" });
+    }
+
+    res.json({ user });
+  } catch (err) {
+    console.log("LOGIN ERROR ❌", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
-
-module.exports = db;
