@@ -27,7 +27,8 @@ router.post("/register", async (req, res) => {
 
 
 // 🔹 LOGIN
-const bcrypt = require("bcrypt");
+
+
 
 router.post("/login", (req, res) => {
   const { email, password } = req.body;
@@ -48,14 +49,8 @@ router.post("/login", (req, res) => {
 
       const user = results[0];
 
-      let isMatch = false;
-
-      // check if hashed or plain
-      if (user.password.startsWith("$2b$")) {
-        isMatch = await bcrypt.compare(password, user.password);
-      } else {
-        isMatch = user.password === password;
-      }
+      // 🔥 bcrypt compare
+      const isMatch = await bcrypt.compare(password, user.password);
 
       if (!isMatch) {
         return res.json({ error: "Wrong password" });
