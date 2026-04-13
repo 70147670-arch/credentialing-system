@@ -30,38 +30,29 @@ router.post("/register", async (req, res) => {
 router.post("/login", (req, res) => {
   const { email, password } = req.body;
 
-  db.getConnection((err, connection) => {
-    if (err) {
-      console.log("Connection Error ❌", err);
-      return res.status(500).json({ error: "DB connection error" });
-    }
+  db.query(
+    "SELECT * FROM users WHERE email = ?",
+    [email],
+    (err, results) => {
 
-    connection.query(
-      "SELECT * FROM users WHERE email = ?",
-      [email],
-      (err, results) => {
-
-        connection.release(); // 🔥 IMPORTANT
-
-        if (err) {
-          console.log("SQL ERROR ❌", err);
-          return res.status(500).json({ error: "Server error" });
-        }
-
-        if (results.length === 0) {
-          return res.json({ message: "Invalid email ❌" });
-        }
-
-        const user = results[0];
-
-        if (user.password !== password) {
-          return res.json({ message: "Wrong password ❌" });
-        }
-
-        res.json({ user });
+      if (err) {
+        console.log("SQL ERROR ❌", err);
+        return res.status(500).json({ error: "Server error" });
       }
-    );
-  });
+
+      if (results.length === 0) {
+        return res.json({ error: "Invalid email" });
+      }
+
+      const user = results[0];
+
+      if (user.password !== password) {
+        return res.json({ error: "Wrong password" });
+      }
+
+      res.json({ user });
+    }
+  );
 });
 // 🔹 REGISTER (Admin/User)
 router.post("/register", (req, res) => {
