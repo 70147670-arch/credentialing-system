@@ -30,29 +30,38 @@ router.post("/register", async (req, res) => {
 router.post("/login", (req, res) => {
   const { email, password } = req.body;
 
-  db.query(
-    "SELECT * FROM users WHERE email = ?",
-    [email],
-    (err, result) => {
-      if (err) {
-        console.log(err);
-        return res.status(500).json({ error: "Server error" });
-      }
-
-      if (result.length === 0) {
-        return res.json({ message: "Invalid email ❌" });
-      }
-
-      const user = result[0];
-
-      // ✅ SIMPLE PASSWORD CHECK (NO bcrypt)
-      if (user.password !== password) {
-        return res.json({ message: "Wrong password ❌" });
-      }
-
-      res.json({ user });
+  db.getConnection((err, connection) => {
+    if (err) {
+      console.log("Connection Error ❌", err);
+      return res.status(500).json({ error: "DB connection error" });
     }
-  );
+
+    connection.query(
+      "SELECT * FROM users WHERE email = ?",
+      [email],
+      (err, results) => {
+
+        connection.release(); // 🔥 IMPORTANT
+
+        if (err) {
+          console.log("SQL ERROR ❌", err);
+          return res.status(500).json({ error: "Server error" });
+        }
+
+        if (results.length === 0) {
+          return res.json({ message: "Invalid email ❌" });
+        }
+
+        const user = results[0];
+
+        if (user.password !== password) {
+          return res.json({ message: "Wrong password ❌" });
+        }
+
+        res.json({ user });
+      }
+    );
+  });
 });
 // 🔹 REGISTER (Admin/User)
 router.post("/register", (req, res) => {
