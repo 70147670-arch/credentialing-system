@@ -27,16 +27,18 @@ router.post("/register", async (req, res) => {
 
 
 // 🔹 LOGIN
+const bcrypt = require("bcrypt");
+
 router.post("/login", (req, res) => {
   const { email, password } = req.body;
 
   db.query(
     "SELECT * FROM users WHERE email = ?",
     [email],
-    (err, results) => {
+    async (err, results) => {
 
       if (err) {
-        console.log("SQL ERROR ❌", err);
+        console.log(err);
         return res.status(500).json({ error: "Server error" });
       }
 
@@ -46,7 +48,16 @@ router.post("/login", (req, res) => {
 
       const user = results[0];
 
-      if (user.password !== password) {
+      let isMatch = false;
+
+      // check if hashed or plain
+      if (user.password.startsWith("$2b$")) {
+        isMatch = await bcrypt.compare(password, user.password);
+      } else {
+        isMatch = user.password === password;
+      }
+
+      if (!isMatch) {
         return res.json({ error: "Wrong password" });
       }
 
@@ -54,7 +65,7 @@ router.post("/login", (req, res) => {
     }
   );
 });
-// 🔹 REGISTER (Admin/User)
+
 router.post("/register", (req, res) => {
   const { name, email, password, role } = req.body;
 
