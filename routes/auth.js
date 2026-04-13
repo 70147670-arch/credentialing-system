@@ -94,5 +94,7 @@ router.post("/register", (req, res) => {
     }
     res.send("DB OK ✅");
   });
+});router.get("/test", (req, res) => {
+  res.send("TEST OK");
 });
 module.exports = router;
