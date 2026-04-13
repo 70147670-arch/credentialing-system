@@ -86,5 +86,13 @@ router.post("/register", (req, res) => {
       res.send("Registration successful ✅");
     }
   );
+}); router.get("/test", (req, res) => {
+  db.query("SELECT 1", (err, result) => {
+    if (err) {
+      console.log("DB TEST ERROR ❌", err);
+      return res.status(500).send("DB ERROR");
+    }
+    res.send("DB OK ✅");
+  });
 });
 module.exports = router;
